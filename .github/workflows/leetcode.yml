@@ -2,8 +2,8 @@ name: Update LeetCode Progress
 
 on:
   schedule:
-    - cron: '0 0 * * *'        # everyday at night UTC
-  workflow_dispatch:          # for manual run
+    - cron: '0 0 * * *'        # every day at midnight UTC
+  workflow_dispatch:          # manual trigger
 
 jobs:
   update-leetcode:
@@ -12,10 +12,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Generate LeetCode stats
-        uses: levimn/leetcode-stats-action@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          leetcode_session: ${{ secrets.LEETCODE_SESSION }}
-          csrf_token: ${{ secrets.CSRF_TOKEN }}
-          readme_path: README.md  # to where will be added data
+          node-version: '16.14.2'  # LTS version required by the script :contentReference[oaicite:0]{index=0}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate LeetCode stats
+        run: node index.js
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}  # GitHub token for updating README :contentReference[oaicite:1]{index=1}
+
+      - name: Commit and push updated README
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Update README.md [skip ci]
+          commit_options: '--no-verify'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
