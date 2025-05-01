@@ -1,0 +1,34 @@
+name: Sync LeetCode Submissions
+
+on:
+  schedule:
+    - cron: '0 0 * * *'    # every day at midnight UTC
+  workflow_dispatch:      # manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Sync LeetCode submissions
+        uses: joshcai/leetcode-sync@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          leetcode-session: ${{ secrets.LEETCODE_SESSION }}
+          leetcode-csrf-token: ${{ secrets.CSRF_TOKEN }}
+          destination-folder: leetcode
+          filter-duplicate-secs: '86400'
+          verbose: true
+
+      - name: Commit & push synced files
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'leetcode/**'
+          message: 'chore: sync LeetCode submissions'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
